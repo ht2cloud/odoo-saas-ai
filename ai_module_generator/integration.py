@@ -345,6 +345,36 @@ class OdooIntegration:
             self.logger.error(f"Failed to update modules list: {e}")
             return False
     
+    def deploy_and_install(self, module_path: str, addons_path: str) -> Tuple[bool, str]:
+        """
+        Deploy and install a module in one operation.
+        
+        Args:
+            module_path: Path to the module directory
+            addons_path: Path to Odoo addons directory
+            
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            # Deploy the module
+            if not self.deploy_module(module_path, addons_path):
+                return False, "Failed to deploy module"
+            
+            # Update modules list
+            if not self.update_modules_list():
+                return False, "Failed to update modules list"
+            
+            # Install the module
+            module_name = os.path.basename(module_path)
+            if not self.install_module(module_name):
+                return False, f"Failed to install module {module_name}"
+            
+            return True, f"Module {module_name} deployed and installed successfully"
+            
+        except Exception as e:
+            return False, f"Deployment failed: {str(e)}"
+    
     def create_module_package(self, module_path: str, output_path: str) -> bool:
         """
         Create a ZIP package of the module for distribution.

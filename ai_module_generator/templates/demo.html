@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odoo AI Module Generator - Live Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 1200px;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            height: 100%;
+        }
+
+        .chat-section {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .results-section {
+            flex: 1;
+            padding: 30px;
+            background: #f8f9fa;
+            border-left: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-height: 500px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            min-height: 200px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.system {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .send-btn {
+            padding: 15px 25px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #0056b3;
+        }
+
+        .send-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .progress-container {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .result-card h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+        }
+
+        .security-score {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .score-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .score-excellent { background: #28a745; }
+        .score-good { background: #17a2b8; }
+        .score-warning { background: #ffc107; }
+        .score-danger { background: #dc3545; }
+
+        .hidden {
+            display: none;
+        }
+
+        .example-prompts {
+            margin-bottom: 20px;
+        }
+
+        .example-prompts h4 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .example-item {
+            background: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+
+        .example-item:hover {
+            background: #dee2e6;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .results-section {
+                border-left: none;
+                border-top: 1px solid #e9ecef;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Odoo AI Module Generator</h1>
+            <p>Transform your ideas into working Odoo modules instantly</p>
+        </div>
+
+        <div class="main-content">
+            <div class="chat-section">
+                <div class="example-prompts">
+                    <h4>💡 Try these examples:</h4>
+                    <div class="example-item" onclick="setPrompt(this)">Customer management system with contact tracking</div>
+                    <div class="example-item" onclick="setPrompt(this)">Sales dashboard with lead tracking and revenue reports</div>
+                    <div class="example-item" onclick="setPrompt(this)">Inventory management with barcode scanning</div>
+                    <div class="example-item" onclick="setPrompt(this)">Project management with task tracking and time logging</div>
+                </div>
+
+                <div class="chat-container">
+                    <div class="messages" id="messages">
+                        <div class="message system">
+                            👋 Welcome! Describe your Odoo module requirements in plain English, and I'll generate a complete, working module for you in real-time.
+                        </div>
+                    </div>
+
+                    <div class="input-section">
+                        <input type="text" class="input-field" id="promptInput" 
+                               placeholder="Describe your module requirements... (e.g., 'I need a customer management system with contact tracking')"
+                               onkeypress="handleKeyPress(event)">
+                        <button class="send-btn" id="sendBtn" onclick="generateModule()">Generate</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div id="progressSection" class="hidden">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">Initializing...</div>
+                    </div>
+                </div>
+
+                <div id="resultsContainer" class="hidden">
+                    <!-- Results will be populated here -->
+                </div>
+
+                <div id="placeholderContent">
+                    <div class="result-card">
+                        <h3>🚀 Ready to Generate</h3>
+                        <p>Enter your module requirements on the left to see:</p>
+                        <ul style="margin-top: 15px; padding-left: 20px;">
+                            <li>Real-time progress updates</li>
+                            <li>Generated module statistics</li>
+                            <li>Security analysis results</li>
+                            <li>Live demo deployment</li>
+                            <li>Download ready-to-use code</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Socket.IO with error handling
+        let socket;
+        try {
+            socket = io();
+        } catch (error) {
+            console.warn('Socket.IO not available, falling back to polling mode');
+            socket = null;
+        }
+        
+        let currentSessionId = null;
+
+        function setPrompt(element) {
+            document.getElementById('promptInput').value = element.textContent;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                generateModule();
+            }
+        }
+
+        function addMessage(content, type = 'system') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = content;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showProgress() {
+            document.getElementById('progressSection').classList.remove('hidden');
+            document.getElementById('resultsContainer').classList.add('hidden');
+            document.getElementById('placeholderContent').classList.add('hidden');
+        }
+
+        function hideProgress() {
+            document.getElementById('progressSection').classList.add('hidden');
+        }
+
+        function updateProgress(progress, message) {
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = message;
+        }
+
+        function showResults(result) {
+            hideProgress();
+            document.getElementById('resultsContainer').classList.remove('hidden');
+            
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = `
+                <div class="result-card">
+                    <h3>✅ ${result.module_name}</h3>
+                    <p>${result.description}</p>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-number">${result.files_generated}</div>
+                            <div class="stat-label">Files Generated</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${result.models_count}</div>
+                            <div class="stat-label">Models Created</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${result.views_count}</div>
+                            <div class="stat-label">Views Generated</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${result.security_report ? result.security_report.score.toFixed(1) : 'N/A'}</div>
+                            <div class="stat-label">Security Score</div>
+                        </div>
+                    </div>
+
+                    ${result.security_report ? `
+                        <div class="security-score">
+                            <div class="score-circle ${getScoreClass(result.security_report.score)}">
+                                ${result.security_report.score.toFixed(0)}
+                            </div>
+                            <div>
+                                <strong>Security Analysis</strong><br>
+                                ${result.security_report.passed ? '✅ Passed' : '❌ Issues Found'} - 
+                                ${result.security_report.issues} security issues found
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="action-buttons">
+                        ${result.demo_url ? `
+                            <a href="${result.demo_url}" target="_blank" class="btn btn-primary">
+                                🚀 Open Demo Instance
+                            </a>
+                        ` : ''}
+                        ${result.download_ready ? `
+                            <a href="/api/download/${currentSessionId}" class="btn btn-success">
+                                📥 Download Module
+                            </a>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getScoreClass(score) {
+            if (score >= 90) return 'score-excellent';
+            if (score >= 75) return 'score-good';
+            if (score >= 60) return 'score-warning';
+            return 'score-danger';
+        }
+
+        function generateModule() {
+            const prompt = document.getElementById('promptInput').value.trim();
+            if (!prompt) return;
+
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Generating...';
+
+            addMessage(prompt, 'user');
+            addMessage('🔄 Starting module generation...', 'system');
+
+            showProgress();
+            updateProgress(0, 'Sending request...');
+
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    requirements: prompt,
+                    options: {
+                        security_scan: true,
+                        deploy: true
+                    }
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    addMessage('❌ Error: ' + data.error, 'error');
+                    hideProgress();
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Generate';
+                    return;
+                }
+
+                currentSessionId = data.session_id;
+                if (socket) {
+                    socket.emit('join_session', { session_id: currentSessionId });
+                } else {
+                    // Start polling for updates
+                    setTimeout(pollStatus, 1000);
+                }
+                updateProgress(5, 'Connected to generation service...');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addMessage('❌ Network error occurred', 'error');
+                hideProgress();
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Generate';
+            });
+        }
+
+        // Socket.IO event handlers
+        if (socket) {
+            socket.on('progress_update', function(data) {
+                updateProgress(data.progress, data.message);
+                
+                if (data.status === 'completed') {
+                    // Fetch final results
+                    fetch(`/api/status/${currentSessionId}`)
+                        .then(response => response.json())
+                        .then(statusData => {
+                            if (statusData.result) {
+                                showResults(statusData.result);
+                                addMessage('✅ Module generated successfully!', 'success');
+                            }
+                            
+                            const sendBtn = document.getElementById('sendBtn');
+                            sendBtn.disabled = false;
+                            sendBtn.textContent = 'Generate';
+                        });
+                } else if (data.status === 'failed') {
+                    addMessage('❌ Generation failed: ' + data.message, 'error');
+                    hideProgress();
+                    
+                    const sendBtn = document.getElementById('sendBtn');
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Generate';
+                }
+            });
+
+            socket.on('connect', function() {
+                console.log('Connected to server');
+            });
+
+            socket.on('disconnect', function() {
+                console.log('Disconnected from server');
+            });
+        } else {
+            // Fallback polling mode
+            function pollStatus() {
+                if (currentSessionId) {
+                    fetch(`/api/status/${currentSessionId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            updateProgress(data.progress || 0, 'Processing...');
+                            
+                            if (data.status === 'completed' && data.result) {
+                                showResults(data.result);
+                                addMessage('✅ Module generated successfully!', 'success');
+                                const sendBtn = document.getElementById('sendBtn');
+                                sendBtn.disabled = false;
+                                sendBtn.textContent = 'Generate';
+                                currentSessionId = null;
+                            } else if (data.status === 'failed') {
+                                addMessage('❌ Generation failed: ' + (data.error || 'Unknown error'), 'error');
+                                hideProgress();
+                                const sendBtn = document.getElementById('sendBtn');
+                                sendBtn.disabled = false;
+                                sendBtn.textContent = 'Generate';
+                                currentSessionId = null;
+                            } else if (data.status !== 'completed') {
+                                setTimeout(pollStatus, 2000);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Polling error:', error);
+                            setTimeout(pollStatus, 5000);
+                        });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
