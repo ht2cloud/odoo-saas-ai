@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="ai_chat_main" name="AI Chat Main Interface">
+        <t t-call="web.layout">
+            <div class="ai-chat-container">
+                <div class="ai-chat-header">
+                    <h1>🤖 AI Module Generator</h1>
+                    <p>Transform your ideas into working Odoo modules instantly</p>
+                </div>
+
+                <div class="ai-chat-main-content">
+                    <div class="ai-chat-section">
+                        <div class="ai-chat-examples">
+                            <h4>💡 Try these examples:</h4>
+                            <div class="example-item" onclick="setPrompt(this)">Customer management system with contact tracking</div>
+                            <div class="example-item" onclick="setPrompt(this)">Sales dashboard with lead tracking and revenue reports</div>
+                            <div class="example-item" onclick="setPrompt(this)">Inventory management with barcode scanning</div>
+                            <div class="example-item" onclick="setPrompt(this)">Project management with task tracking and time logging</div>
+                        </div>
+
+                        <div class="ai-chat-container-inner">
+                            <div class="ai-messages" id="aiMessages">
+                                <div class="message system">
+                                    👋 Welcome! Describe your Odoo module requirements in plain English, and I'll generate a complete, working module for you in real-time.
+                                </div>
+                            </div>
+
+                            <div class="ai-input-section">
+                                <input type="text" class="ai-input-field" id="promptInput" 
+                                       placeholder="Describe your module requirements... (e.g., 'I need a customer management system with contact tracking')"
+                                       onkeypress="handleKeyPress(event)"/>
+                                <button class="ai-send-btn" id="sendBtn" onclick="generateModule()">Generate</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ai-results-section">
+                        <div id="progressSection" class="hidden">
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill"></div>
+                                </div>
+                                <div class="progress-text" id="progressText">Initializing...</div>
+                            </div>
+                        </div>
+
+                        <div id="resultsContainer" class="hidden">
+                            <!-- Results will be populated here -->
+                        </div>
+
+                        <div id="placeholderContent">
+                            <div class="result-card">
+                                <h3>🚀 Ready to Generate</h3>
+                                <p>Enter your module requirements on the left to see:</p>
+                                <ul style="margin-top: 15px; padding-left: 20px;">
+                                    <li>Real-time progress updates</li>
+                                    <li>Generated module statistics</li>
+                                    <li>Security analysis results</li>
+                                    <li>Direct module installation</li>
+                                    <li>Module management tools</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- AI Chat Session Views -->
+    <record id="view_ai_chat_session_tree" model="ir.ui.view">
+        <field name="name">ai.chat.session.tree</field>
+        <field name="model">ai.chat.session</field>
+        <field name="arch" type="xml">
+            <tree string="AI Chat Sessions">
+                <field name="name"/>
+                <field name="status"/>
+                <field name="progress"/>
+                <field name="module_name"/>
+                <field name="security_score"/>
+                <field name="user_id"/>
+                <field name="create_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_ai_chat_session_form" model="ir.ui.view">
+        <field name="name">ai.chat.session.form</field>
+        <field name="model">ai.chat.session</field>
+        <field name="arch" type="xml">
+            <form string="AI Chat Session">
+                <header>
+                    <field name="status" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Session Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="session_id"/>
+                            <field name="user_id"/>
+                            <field name="progress" widget="progressbar"/>
+                        </group>
+                        <group>
+                            <field name="module_name"/>
+                            <field name="security_score"/>
+                            <field name="create_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Requirements">
+                            <field name="requirements"/>
+                        </page>
+                        <page string="Result Data" attrs="{'invisible': [('status', '!=', 'completed')]}">
+                            <field name="result_data"/>
+                        </page>
+                        <page string="Error" attrs="{'invisible': [('status', '!=', 'failed')]}">
+                            <field name="error_message"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- AI Chat Main Interface -->
+    <record id="action_ai_chat_interface" model="ir.actions.client">
+        <field name="name">AI Module Generator</field>
+        <field name="tag">ai_chat_widget</field>
+    </record>
+
+    <!-- AI Chat Sessions Action -->
+    <record id="action_ai_chat_sessions" model="ir.actions.act_window">
+        <field name="name">AI Chat Sessions</field>
+        <field name="res_model">ai.chat.session</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No AI chat sessions yet!
+            </p>
+            <p>
+                Start a new AI chat session to generate Odoo modules from natural language requirements.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_ai_chat_root" 
+              name="AI Module Generator" 
+              sequence="50"
+              web_icon="odoo_ai_chat,static/description/icon.png"/>
+
+    <menuitem id="menu_ai_chat_interface"
+              name="Generate Module"
+              parent="menu_ai_chat_root"
+              action="action_ai_chat_interface"
+              sequence="10"/>
+
+    <menuitem id="menu_ai_chat_sessions"
+              name="Chat Sessions"
+              parent="menu_ai_chat_root"
+              action="action_ai_chat_sessions"
+              sequence="20"/>
+
+</odoo>
