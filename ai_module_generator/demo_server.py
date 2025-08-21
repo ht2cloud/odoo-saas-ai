@@ -11,7 +11,7 @@ import asyncio
 import threading
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_file
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
 import tempfile
 import shutil
 import zipfile
@@ -274,7 +274,7 @@ def handle_join_session(data):
     """Join a generation session for updates"""
     session_id = data.get('session_id')
     if session_id:
-        socketio.join_room(session_id)
+        join_room(session_id)
         emit('joined', {'session_id': session_id})
 
 
