@@ -30,6 +30,22 @@ cd odoo-saas-ai
 pip install -e .
 ```
 
+### Try the Live Demo
+
+```bash
+# Start the interactive web demo
+odoo-ai-generator demo
+
+# Open your browser to: http://localhost:5000
+```
+
+The web demo provides:
+- 🌐 **Interactive Chat Interface** - Describe modules in plain English
+- ⚡ **Real-time Generation** - Watch progress as modules are created
+- 📊 **Live Statistics** - See files, models, views, and security scores
+- 📦 **Instant Download** - Get complete, ready-to-use modules
+- 🚀 **Demo Deployment** - Simulated Odoo instance integration
+
 ### Generate Your First Module
 
 ```bash
@@ -256,6 +272,7 @@ pytest ai_module_generator/tests/integration/ --odoo-config test-config.json
 ## 📚 Documentation
 
 - **[Blueprint](docs/BLUEPRINT.md)** - Project vision and roadmap
+- **[Demo Guide](docs/DEMO.md)** - Web interface and live demo
 - **[Architecture](docs/architecture.md)** - Technical architecture details
 - **[User Flows](docs/user_flows.md)** - Interaction patterns and workflows
 - **[API Reference](docs/api.md)** - Programmatic interface documentation
