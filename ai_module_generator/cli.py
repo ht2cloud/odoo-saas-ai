@@ -174,6 +174,22 @@ def submit_feedback_command(args):
         sys.exit(1)
 
 
+def demo_server_command(args):
+    """Handle demo server command"""
+    try:
+        from .demo_server import run_demo_server
+        print("Starting Odoo AI Module Generator Demo Server...")
+        print("This will open a web interface for real-time module generation")
+        run_demo_server(host=args.host, port=args.port, debug=args.debug)
+    except ImportError as e:
+        print(f"Demo server dependencies not available: {e}")
+        print("Please install: pip install flask flask-socketio")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error starting demo server: {e}")
+        sys.exit(1)
+
+
 def test_connection_command(args):
     """Handle Odoo connection testing"""
     try:
@@ -345,6 +361,29 @@ def main():
         help="Path to feedback database"
     )
     submit_parser.set_defaults(func=submit_feedback_command)
+    
+    # Demo server command
+    demo_parser = subparsers.add_parser(
+        "demo",
+        help="Start interactive demo web server"
+    )
+    demo_parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Host to bind the server to"
+    )
+    demo_parser.add_argument(
+        "--port",
+        type=int,
+        default=5000,
+        help="Port to run the server on"
+    )
+    demo_parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Run in debug mode"
+    )
+    demo_parser.set_defaults(func=demo_server_command)
     
     # Test connection command
     test_parser = subparsers.add_parser(
